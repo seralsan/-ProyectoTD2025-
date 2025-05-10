@@ -14,7 +14,19 @@ knitr::opts_chunk$set(echo = TRUE)
 
 Relización del proyecto en la asignatura: Tratamiento de los Datos, del grado de Ciencia de Datos del primer curso. La finalidad de este proyecto es la realización de un análisis exploratorio de los datos que se han recopilado en varios tickets de Mercadona.
 
+# Base del estudio y recopilación de datos
+
+Los estudiantes participantes recopilaron activamente tickets de compra de diferentes supermercados pertenecientes a una misma cadena comercial, dedicando tiempo y esfuerzo para asegurar una muestra diversa y representativa. Esta recolección directa complementó una selección inicial de recibos proporcionados por los docentes coordinadores del proyecto, que podían incluir ejemplos de transacciones de años anteriores.
+
+Los tickets resultaron ser un material muy interesante para el análisis, ya que contenían información detallada sobre cada compra: productos adquiridos, precios, fechas de transacción y otros datos relevantes. Esta combinación de fuentes (aportes docentes y recolección estudiantil) permitió desarrollar una investigación sólida y bien fundamentada.
+
+El proceso garantizó no solo la variedad de los datos, sino también su relevancia para los objetivos planteados en el estudio.
+
 ## Importación
+
+El siguiente código establece los parámetros básicos para la ejecución del análisis, incluyendo la configuración de visualización y la carga de las librerías necesarias. Primero, se definen opciones generales para el manejo de chunks en R Markdown, asegurando una presentación limpia de los resultados. Luego, se instalan y cargan los paquetes esenciales para el procesamiento de datos, visualización y manipulación de texto.
+
+Finalmente, se importan los datos de los tickets de compra desde una carpeta específica, preparando el entorno para el análisis posterior.
 
 ```{r, cache = F, echo = F, message = F, warning = F, tidy = F}
 # CONFIGURACIÓN GENERAL
@@ -53,6 +65,7 @@ package.check <- lapply(packages, FUN = function(x) {
 search()
 ```
 
+Ahora cargaremos todas las librerias necesarias para la ejecución de este código.
 
 ```{r, echo =FALSE, warning=FALSE, message=FALSE}
 #Cargamos libreria pracma y los paquetes
@@ -76,7 +89,7 @@ directorio <- "./data"
 # Guardamos en la variable 'tickets' todos los archivos contenidos en esta carpeta, que en este caso corresponden a los tickets de compra.
 tickets <- list.files(directorio, full.names = TRUE)
 ```
-
+## Organización de la información
 
 La lectura de un ticket se organiza en una función que sigue varios pasos. Primero, se establece la codificación en UTF-8 para evitar errores posteriores, ya que algunos archivos pueden tener formatos diferentes.
 
@@ -153,7 +166,7 @@ for (ticket in tickets) {
 }
 ```
 
-Una vez procesados los tickets, se unifican los dataframes y se separan las variables combinadas, como la ubicación o la fecha y hora, en columnas independientes.
+Una vez procesados los tickets, con todos los productos almacenados en un a valiable, se unifican los dataframes y se separan las variables combinadas, como la ubicación o la fecha y hora, en columnas independientes.
 
 ```{r, echo =FALSE, warning=FALSE, message=FALSE}
 #Unión de todos los df de la lista
@@ -183,7 +196,11 @@ df$precio_prod <- as.numeric(gsub(",", ".", df$precio_prod))
 cabecera <- df %>% select(Supermercado, Calle, CP, Ubicacion, Telefono, Fecha, Hora, Total)
 ```
 
-A continuación, se analiza la presencia del parking en los tickets, creando una variable que indica si aparece o no, y se incorpora al dataframe principal junto a las cabeceras, productos y tota
+El estudio avanza examinando específicamente la presencia del servicio de parking en los tickets. Para ello, se implementa un proceso de identificación que determina si cada recibo incluye o no este concepto. Esta información se incorpora al dataframe principal mediante una nueva variable binaria, ampliando así la estructura de datos que ya contenía las cabeceras, los importes totales y el detalle de productos.
+
+Paralelamente, se genera un dataset auxiliar que filtra exclusivamente los artículos comprados, conservando sus atributos clave: descripción, unidades adquiridas y valor unitario. Esta segmentación facilita posteriores análisis centrados en el comportamiento de compra, manteniendo los datos relevantes en una estructura optimizada para dicho propósito.
+
+La creación de estas dos estructuras complementarias permite abordar diferentes dimensiones del análisis con la información organizada según su finalidad específica.
 
 ```{r, echo =FALSE, warning=FALSE, message=FALSE}
 
