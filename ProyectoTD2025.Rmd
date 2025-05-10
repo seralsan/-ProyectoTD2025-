@@ -470,3 +470,48 @@ ggplot(compras_por_dia, aes(x = Dia_Semana, y = Total_Compras, fill = Dia_Semana
 Como podemos observar en el gráfico, el sábado es el dia de la semana en el que se concentran más compras.
 
 #4. ¿Cuáles son los 5 productos más baratos comprados por unidad? ¿Con qué frecuencia se compran?
+```{r}
+library(dplyr)
+library(ggplot2)
+library(stringr)
+
+# 1. Normalizar nombres de productos
+datos_limpios <- datos_integrados %>%
+  filter(!is.na(Cantidad), Cantidad > 0) %>%
+  mutate(
+    Producto_normalizado = Producto %>%
+      tolower() %>%
+      str_trim() %>%
+      str_replace_all("\\s+", " ")  # Reemplazar múltiples espacios por uno solo
+  )
+
+# 2. Filtrar productos vendidos por unidad (sin "kg") y calcular precio unitario
+productos_unicos <- datos_limpios %>%
+  filter(!str_detect(Producto_normalizado, "kg")) %>%
+  mutate(
+    Precio_Unitario = precio_prod / Cantidad
+  ) %>%
+  group_by(Producto_normalizado) %>%
+  summarise(
+    Precio_Promedio = mean(Precio_Unitario, na.rm = TRUE),
+    Frecuencia = n(),
+    Total_Vendido = sum(Cantidad, na.rm = TRUE)
+  ) %>%
+  arrange(Precio_Promedio) %>%
+  slice_head(n = 5)
+
+productos_unicos
+
+# 3. Gráfico
+ggplot(productos_unicos, aes(x = reorder(Producto_normalizado, Precio_Promedio), y = Precio_Promedio, fill = Producto_normalizado)) +
+  geom_col() +
+  geom_text(aes(label = paste0("Veces comprado: ", Frecuencia)), hjust = -0.1, size = 3) +
+  coord_flip() +
+  labs(
+    title = "Top 5 productos más baratos por unidad (nombres normalizados)",
+    subtitle = "Agrupados tras estandarizar nombres",
+    x = "Producto",
+    y = "Precio promedio por unidad (€)"
+  ) +
+  theme_minimal()
+```
