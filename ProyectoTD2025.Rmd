@@ -361,6 +361,46 @@ ggplot(top_pescado_unidades, aes(x = reorder(Producto, Unidades_vendidas), y = U
   ) +
   theme_minimal()
 
+
+#5 ¿ Cuál es la procedencia de los tickets ?¿ Qué ciudad/ pueblo tiene un mayor número de tickets ?
+```{r}
+library(dplyr)
+library(ggplot2)
+
+# 0) Limpiar Ubicacion — sólo nos quedamos con CP numérico
+tickets_unicos_clean <- datos_integrados %>%
+  distinct(Supermercado, Calle, CP, Ubicacion, Fecha, Hora) %>%
+  # Convertimos CP a numérico: los no válidos (cabeceras) se vuelven NA
+  mutate(CP_num = suppressWarnings(as.integer(CP))) %>%
+  # Nos quedamos sólo con los que tengan CP válido
+  filter(!is.na(CP_num)) %>%
+  select(-CP_num)
+
+# 1) Contar tickets por ciudad/pueblo (ahora limpio)
+tickets_por_ciudad <- tickets_unicos_clean %>%
+  count(Ubicacion, name = "n_tickets") %>%
+  arrange(desc(n_tickets))
+
+# 2) Top 5 y gráfico
+top5_ciudades <- tickets_por_ciudad %>% slice_head(n = 5)
+print(top5_ciudades)
+
+ggplot(top5_ciudades, aes(x = reorder(Ubicacion, n_tickets), y = n_tickets)) +
+  geom_col(fill = "#69b3a2") +
+  coord_flip() +
+  geom_text(aes(label = n_tickets), hjust = 1.2, color = "white") +
+  labs(
+    title = "Top 5 ciudades/pueblos según número de tickets",
+    x     = "Ciudad / Pueblo",
+    y     = "Número de tickets"
+  ) +
+  theme_minimal()
+
+
+
+```
+
+
 ## Preguntas Propuestas 
 # 1. ¿Cuál es el promedio de productos por ticket?
 ```{r}
