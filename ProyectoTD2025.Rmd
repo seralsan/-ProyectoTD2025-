@@ -277,6 +277,9 @@ Preguntas propuestas:
 3. ¿Qué días de la semana concentran más compras?
 4. ¿Cuáles son los 5 productos más baratos comprados por unidad? ¿Con qué frecuencia se compran?
 5. ¿Qué porcentaje del gasto total se ha destinado a productos no alimentarios? ¿Qué tipo de productos destacan en ese grupo?
+6. ¿Cuál es el producto más vendido por día de la semana?
+7. ¿Cómo varía el gasto promedio por ticket según la ciudad o pueblo donde se realiza la compra?
+
 ## Preguntas Obligatorias
 
 #1. ¿Cuáles son los 5 productos, de los vendidos por unidades, con más ventas ? ¿Cuántas unidades de cada uno se han vendido ?
