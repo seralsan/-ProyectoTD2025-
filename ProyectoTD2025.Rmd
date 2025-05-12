@@ -396,6 +396,7 @@ ggplot(top5_ciudades, aes(x = reorder(Ubicacion, n_tickets), y = n_tickets)) +
 
 
 ```
+Los tickets provienen de la ciudad de Valencia y 4 pueblos aledaños (Alboraia, Burjassot, Muro, Alcoi). Valencia (ciudad) tiene el mayor número de tickets (120), mientras que Alcoi tiene solo 22. 
 
 #6  Muestra mediante un diagrama el número de tickets recogidos cada día de las semana. ¿Si tuvieses que cerrar un día entre semana qué día lo harías ?
 ```{r}
