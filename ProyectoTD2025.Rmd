@@ -397,6 +397,37 @@ ggplot(top5_ciudades, aes(x = reorder(Ubicacion, n_tickets), y = n_tickets)) +
 
 ```
 
+#6  Muestra mediante un diagrama el número de tickets recogidos cada día de las semana. ¿Si tuvieses que cerrar un día entre semana qué día lo harías ?
+```{r}
+# 1) Extraer un registro por ticket (evitamos duplicados por producto)
+tickets_unicos <- datos_integrados %>%
+  distinct(Supermercado, Calle, CP, Ubicacion, Fecha, Hora)
+
+# 2) Convertir Fecha a Date y extraer día de la semana (lunes=1, …, domingo=7)
+tickets_por_dia <- tickets_unicos %>%
+  mutate(
+    Fecha = as.Date(Fecha, format = "%d/%m/%Y"),
+    DiaSemana = wday(Fecha, label = TRUE, abbr = FALSE, week_start = 1)
+  ) %>%
+  count(DiaSemana, name = "NumTickets") %>%
+  arrange(match(DiaSemana,
+                c("lunes","martes","miércoles","jueves","viernes","sábado","domingo")))
+
+# 3) Gráfico de barras
+ggplot(tickets_por_dia, aes(x = DiaSemana, y = NumTickets, fill = DiaSemana)) +
+  geom_col(show.legend = FALSE) +
+  geom_text(aes(label = NumTickets), vjust = -0.5) +
+  labs(
+    title = "Número de tickets recogidos por día de la semana",
+    x = "Día de la semana",
+    y = "Número de tickets"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+
+```
+
 ## Preguntas Propuestas 
 # 1. ¿Cuál es el promedio de productos por ticket?
 ```{r}
