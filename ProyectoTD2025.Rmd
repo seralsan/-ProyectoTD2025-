@@ -738,6 +738,21 @@ correlacion_redon
 
 ```{r}
 
+# Extraer la hora (parte antes de “:”) y contar tickets
+tickets_por_hora <- cabecera %>%
+  mutate(Hora = str_extract(Hora, "^\\d{1,2}")) %>% 
+  count(Hora)
+
+# Gráfico de barras
+ggplot(tickets_por_hora, aes(x = factor(Hora, levels = sort(unique(Hora))), y = n)) +
+  geom_col(fill = "steelblue") +
+  labs(
+    title = "Número de tickets por hora del día",
+    x     = "Hora",
+    y     = "Cantidad de tickets"
+  ) +
+  theme_minimal()
+
 ```
 
 10. ¿Cuál es el ticket con mayor gasto total y qué productos contiene?
