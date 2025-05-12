@@ -305,6 +305,7 @@ promedio_por_ticket <- df %>%
 promedio_por_ticket
 
 ```
+
 ```{r}
 
 
