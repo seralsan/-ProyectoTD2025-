@@ -427,6 +427,7 @@ ggplot(tickets_por_dia, aes(x = DiaSemana, y = NumTickets, fill = DiaSemana)) +
 
 
 ```
+El día de la semana en donde se recogieron más tickets fue el sabado (80), mientras que el domingo fue el día en donde menos tickets se recogieron (1). Hay 43 tickets que no se saben que día se recogieron.  
 
 ## Preguntas Propuestas 
 # 1. ¿Cuál es el promedio de productos por ticket?
