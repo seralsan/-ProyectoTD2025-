@@ -12,7 +12,9 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Introducción
 
-Relización del proyecto en la asignatura: Tratamiento de los Datos, del grado de Ciencia de Datos del primer curso. La finalidad de este proyecto es la realización de un análisis exploratorio de los datos que se han recopilado en varios tickets de Mercadona.
+Este proyecto se enmarca en la asignatura Tratamiento de los Datos del Grado en Ciencia de Datos de la Universitat de València. Su principal objetivo es aplicar técnicas de manipulación, limpieza y análisis exploratorio de datos utilizando como fuente real los tickets de compra emitidos por supermercados de una misma cadena comercial, en este caso, Mercadona.
+
+A partir de los tickets recogidos, se desarrolla un proceso de análisis que incluye la importación y estructuración de datos no estructurados, la extracción de información relevante (productos, cantidades, precios, fechas, etc.), y su posterior organización en un conjunto de datos homogéneo. Esto permite realizar estudios cuantitativos como el seguimiento del gasto, la frecuencia de productos, patrones de compra, evolución de precios, comparativas por categorías, entre otros.
 
 # Base del estudio y recopilación de datos
 
