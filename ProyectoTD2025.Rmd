@@ -652,4 +652,5 @@ ggplot(top_no_alimentarios, aes(x = reorder(Producto, Gasto_Total), y = Gasto_To
   theme_minimal()
 
 ```
+Como podemos ver en el gráfico el producto (no alimentario) que genera más gasto es el "detergente Bla/col" con un gasto total de 11 euros, mientras que el que genera menos gasto es la "Gel lav. maqui" (10 euros). Los productos "Soja natural caja" y las esponjas con jabon generan el mismo gasto (9.6 euros).
 
