@@ -280,6 +280,8 @@ Preguntas propuestas:
 6.¿Hay relación entre el precio y la cantidad comprada?
 7. ¿Cuál es el producto más vendido por día de la semana? ¿Cuál es el producto más vendido por ubicación? 
 8. ¿Cómo varía el gasto promedio por ticket según la ciudad o pueblo donde se realiza la compra?
+9. ¿A qué hora del día se realizan más compras?
+10. ¿Cuál es el ticket con mayor gasto total y qué productos contiene?
 >>>>>>> 27bc343ef7940424346e2c5f296ac1965758d30b
 
 ## Preguntas Obligatorias
@@ -452,6 +454,7 @@ promedio_por_ticket <- df %>%
 promedio_por_ticket
 
 ```
+
 ```{r}
 
 
@@ -690,3 +693,11 @@ correlacion_redon<- round(correlacion, 2)
 correlacion_redon
 ```
 >>>>>>> 27bc343ef7940424346e2c5f296ac1965758d30b
+
+9. ¿A qué hora del día se realizan más compras?
+
+```{r}
+
+```
+
+10. ¿Cuál es el ticket con mayor gasto total y qué productos contiene?
