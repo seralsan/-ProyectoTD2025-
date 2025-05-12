@@ -275,6 +275,8 @@ Preguntas propuestas:
 3. ¿Qué días de la semana concentran más compras?
 4. ¿Cuáles son los 5 productos más baratos comprados por unidad? ¿Con qué frecuencia se compran?
 5. ¿Qué porcentaje del gasto total se ha destinado a productos no alimentarios? ¿Qué tipo de productos destacan en ese grupo?
+6.¿Hay relación entre el precio y la cantidad comprada?
+
 ## Preguntas Obligatorias
 
 #1. ¿Cuáles son los 5 productos, de los vendidos por unidades, con más ventas ? ¿Cuántas unidades de cada uno se han vendido ?
@@ -531,4 +533,28 @@ ggplot(productos_unicos, aes(x = reorder(Producto_normalizado, Precio_Promedio),
     y = "Precio promedio por unidad (€)"
   ) +
   theme_minimal()
+```
+
+#6.¿Hay relación entre el precio y la cantidad comprada?
+```{r}
+# Filtrar datos relevantes y calcular el precio unitario
+datos_relacion <- datos_integrados %>%
+  filter(!is.na(Cantidad), Cantidad > 0, !is.na(precio_prod)) %>%
+  mutate(Precio_Unitario = precio_prod / Cantidad)
+
+# Gráfico de dispersión para visualizar la relación
+ggplot(datos_relacion, aes(x = Cantidad, y = Precio_Unitario)) +
+  geom_point(alpha = 0.5, color = "blue") +
+  geom_smooth(method = "lm", color = "red", se = FALSE) +
+  labs(
+    title = "Relación entre Precio Unitario y Cantidad Comprada",
+    x = "Cantidad Comprada",
+    y = "Precio Unitario (€)"
+  ) +
+  theme_minimal()
+
+# Cálculo de la correlación
+correlacion <- cor(datos_relacion$Cantidad, datos_relacion$Precio_Unitario, use = "complete.obs")
+correlacion_redon<- round(correlacion, 2)
+correlacion_redon
 ```
