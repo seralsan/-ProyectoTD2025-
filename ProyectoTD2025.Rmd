@@ -532,3 +532,57 @@ ggplot(productos_unicos, aes(x = reorder(Producto_normalizado, Precio_Promedio),
   ) +
   theme_minimal()
 ```
+#5. ¿Qué porcentaje del gasto total se ha destinado a productos no alimentarios? ¿Qué tipo de productos destacan en ese grupo?
+
+
+```{r}
+library(dplyr)
+library(stringr)
+library(ggplot2)
+
+# Clasificación de categorías, incluyendo "No Alimentario"
+datos_categorizados <- datos_integrados %>%
+  mutate(
+    Categoria = case_when(
+      str_detect(tolower(Producto), "servilleta|papel|fregona|estropajo|bolsa|detergente|bayeta|gel|suavizante|higiénico|aluminio|film|cepillo|cubo|ambientador|esponja|báscula|menaje|botella|caja|vela|tupper") ~ "No Alimentario",
+      TRUE ~ "Alimentario"
+    )
+  )
+
+# Calcular gasto total y porcentaje
+gasto_por_categoria <- datos_categorizados %>%
+  filter(!is.na(precio_prod), !is.na(Cantidad)) %>%
+  mutate(Gasto = precio_prod * Cantidad) %>%
+  group_by(Categoria) %>%
+  summarise(Gasto_Total = sum(Gasto, na.rm = TRUE)) %>%
+  mutate(Porcentaje = round(100 * Gasto_Total / sum(Gasto_Total), 2))
+
+# Mostrar porcentaje destinado a productos no alimentarios
+print(gasto_por_categoria)
+
+# Productos no alimentarios destacados
+top_no_alimentarios <- datos_categorizados %>%
+  filter(Categoria == "No Alimentario", !is.na(precio_prod), !is.na(Cantidad)) %>%
+  mutate(Gasto = precio_prod * Cantidad) %>%
+  group_by(Producto) %>%
+  summarise(Gasto_Total = sum(Gasto, na.rm = TRUE)) %>%
+  arrange(desc(Gasto_Total)) %>%
+  slice_head(n = 5)
+
+# Mostrar productos destacados
+print(top_no_alimentarios)
+
+# Gráfico de productos no alimentarios más relevantes
+ggplot(top_no_alimentarios, aes(x = reorder(Producto, Gasto_Total), y = Gasto_Total)) +
+  geom_col(fill = "#FF7F0E") +
+  coord_flip() +
+  geom_text(aes(label = round(Gasto_Total, 2)), hjust = -0.1) +
+  labs(
+    title = "Top 5 productos no alimentarios por gasto",
+    x = "Producto",
+    y = "Gasto total (€)"
+  ) +
+  theme_minimal()
+
+```
+
