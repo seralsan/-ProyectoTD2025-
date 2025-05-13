@@ -283,8 +283,9 @@ Preguntas propuestas:
 10. ¿Qué porcentaje de tickets incluye parking?
 11. ¿Existe alguna relación entre la cantidad de productos y el parking?
 12. ¿Qué productos muestran mayor variación de precio a lo largo del tiempo? ¿A qué categoría pertenecen?
+13. ¿Qué ubicación tiene el ticket con mayor gasto total?
 
->>>>>>> 27bc343ef7940424346e2c5f296ac1965758d30b
+
 
 ## Preguntas Obligatorias
 
@@ -639,7 +640,7 @@ ggplot(productos_unicos, aes(x = reorder(Producto_normalizado, Precio_Promedio),
   ) +
   theme_minimal()
 ```
-<<<<<<< HEAD
+
 #5. ¿Qué porcentaje del gasto total se ha destinado a productos no alimentarios? ¿Qué tipo de productos destacan en ese grupo?
 
 
@@ -695,8 +696,6 @@ ggplot(top_no_alimentarios, aes(x = reorder(Producto, Gasto_Total), y = Gasto_To
 ```
 Como podemos ver en el gráfico el producto (no alimentario) que genera más gasto es el "detergente Bla/col" con un gasto total de 11 euros, mientras que el que genera menos gasto es la "Gel lav. maqui" (10 euros). Los productos "Soja natural caja" y las esponjas con jabon generan el mismo gasto (9.6 euros).
 
-=======
-
 #6.¿Hay relación entre el precio y la cantidad comprada?
 ```{r precio-cantidad, echo=TRUE, warning=FALSE, message=FALSE}
 # Filtrar datos relevantes y calcular el precio unitario
@@ -724,7 +723,8 @@ correlacion_redon
 
 9. ¿A qué hora del día se realizan más compras?
 
-<<<<<<< HEAD
+
+
 ```{r}
 
 # Extraer la hora (parte antes de “:”) y contar tickets
@@ -745,9 +745,7 @@ ggplot(tickets_por_hora, aes(x = factor(Hora, levels = sort(unique(Hora))), y = 
 ```
 
 10. ¿Qué porcentaje de tickets incluye parking?
-=======
-10. ¿Cuál es el ticket con mayor gasto total y qué productos contiene?
->>>>>>> 77dcd6176d0ccaa9fa5259b88b12959e1c781e68
+
 
 ```{r}
 library(dplyr)
@@ -781,7 +779,7 @@ ggplot(parking_stats, aes(x = flag, y = pct, fill = flag)) +
 
 ```
 
-=======
+
 
 11. ¿Existe alguna relación entre la cantidad de productos y el parking?
 El objetivo de esta pregunta es ver si la cantidad total de productos comprados en un ticket guarda relación con si el cliente ontiene parking o no
@@ -860,9 +858,6 @@ El gráfico muestra que el uso del parking está fuertemente concentrado en los 
 Esto sugiere que, según los datos disponibles, los clientes que realizan compras más voluminosas tienden a utilizar (o al menos registrar) el parking, mientras que quienes compran pocos productos apenas lo hacen. Sin embargo, es importante recordar que esta variable de parking se ha construido en base a la presencia de una línea específica en el ticket, por lo que puede no reflejar con total precisión el uso real del aparcamiento por parte del cliente.
 
 
-<<<<<<< HEAD
->>>>>>> 6c8e91057f9f40299df9a6f29a7986c4c4ba2a52
-=======
 
 
 12. ¿Qué 10 productos muestran mayor variación de precio a lo largo del tiempo? ¿A qué categoría pertenecen?
@@ -909,5 +904,46 @@ ggplot(top10, aes(x = reorder(Producto, desv_std), y = desv_std)) +
 
 ```
 
+# 13.¿Qué ubicación tiene el ticket con mayor gasto total?
+```{r}
+# 1. Calcular el gasto total por ticket y ubicación
+tickets_ubicacion <- datos_integrados %>%
+  filter(!is.na(Supermercado), !is.na(Ubicacion)) %>%
+  group_by(Supermercado, Calle, Ubicacion, CP, Fecha, Hora) %>%  # Agrupamos por ticket único
+  summarise(
+    Total_ticket = sum(precio_prod * Cantidad, na.rm = TRUE),
+    .groups = 'drop'
+  ) %>%
+  arrange(desc(Total_ticket))
 
->>>>>>> 77dcd6176d0ccaa9fa5259b88b12959e1c781e68
+# 2. Identificar el ticket con mayor gasto
+ticket_max_gasto <- tickets_ubicacion %>% slice(1)
+
+# Mostrar resultado en tabla
+kable(ticket_max_gasto, caption = "Ticket con mayor gasto total")
+
+# 3. Gráfico comparativo: Top 5 ubicaciones con tickets más caros
+top_ubicaciones <- tickets_ubicacion %>%
+  group_by(Ubicacion) %>%
+  summarise(
+    Max_gasto = max(Total_ticket),
+    Promedio_gasto = mean(Total_ticket)
+  ) %>%
+  arrange(desc(Max_gasto)) %>%
+  slice_head(n = 5)
+
+ggplot(top_ubicaciones, aes(x = reorder(Ubicacion, Max_gasto), y = Max_gasto)) +
+  geom_col(fill = "#1f77b4") +
+  geom_text(aes(label = paste0("€", round(Max_gasto, 2))), hjust = -0.1) +
+  coord_flip() +
+  labs(
+    title = "Top 5 ubicaciones con tickets más caros",
+    subtitle = paste("Máximo registrado:", ticket_max_gasto$Ubicacion[1], "con €", round(ticket_max_gasto$Total_ticket[1], 2)),
+    x = "Ubicación",
+    y = "Gasto máximo (€)"
+  ) +
+  theme_minimal() +
+  theme(plot.subtitle = element_text(face = "bold", color = "red"))
+```
+
+
