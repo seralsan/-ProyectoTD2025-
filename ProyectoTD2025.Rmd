@@ -278,12 +278,11 @@ Preguntas propuestas:
 5. ¿Qué porcentaje del gasto total se ha destinado a productos no alimentarios? ¿Qué tipo de productos destacan en ese grupo?
 6.¿Hay relación entre el precio y la cantidad comprada?
 7. ¿Cuál es el producto más vendido por día de la semana? ¿Cuál es el producto más vendido por ubicación?
-8. ¿Cómo varía el gasto promedio por ticket según la ciudad o pueblo donde se realiza la compra?
-9. ¿A qué hora del día se realizan más compras?
-10. ¿Qué porcentaje de tickets incluye parking?
-11. ¿Existe alguna relación entre la cantidad de productos y el parking?
-12. ¿Qué productos muestran mayor variación de precio a lo largo del tiempo? ¿A qué categoría pertenecen?
-13. ¿Qué ubicación tiene el ticket con mayor gasto total?
+8. ¿A qué hora del día se realizan más compras?
+9. ¿Qué porcentaje de tickets incluye parking?
+10. ¿Existe alguna relación entre la cantidad de productos y el parking?
+11. ¿Qué productos muestran mayor variación de precio a lo largo del tiempo? ¿A qué categoría pertenecen?
+12. ¿Qué ubicación tiene el ticket con mayor gasto total?
 
 
 
@@ -721,7 +720,65 @@ correlacion_redon
 ```
 >>>>>>> 27bc343ef7940424346e2c5f296ac1965758d30b
 
-9. ¿A qué hora del día se realizan más compras?
+
+#7 ¿Cuál es el producto más vendido por día de la semana? ¿Cuál es el producto más vendido por ubicación? 
+
+
+```{r top_productos_sin_na, echo=TRUE, message=FALSE, warning=FALSE}
+
+
+# 1) Añadir día de la semana (sin NAs en Fecha, Producto ni Cantidad)
+datos_semana <- datos_integrados %>%
+  mutate(
+    Fecha = as.Date(Fecha, format = "%d/%m/%Y"),
+    DiaSemana = wday(Fecha, label = TRUE, abbr = FALSE, week_start = 1)
+  ) %>%
+  filter(
+    !is.na(Fecha),
+    !is.na(Producto),
+    !is.na(Cantidad),
+    Cantidad > 0
+  )
+
+# 2) Producto más vendido por día de la semana
+top_por_dia <- datos_semana %>%
+  group_by(DiaSemana, Producto) %>%
+  summarise(TotalUnidades = sum(Cantidad), .groups = "drop") %>%
+  arrange(DiaSemana, desc(TotalUnidades)) %>%
+  group_by(DiaSemana) %>%
+  slice_head(n = 1) %>%
+  ungroup()
+
+# 3) Producto más vendido por ubicación (sin NAs)
+top_por_ubi <- datos_integrados %>%
+  filter(
+    !is.na(Ubicacion),
+    !is.na(Producto),
+    !is.na(Cantidad),
+    Cantidad > 0
+  ) %>%
+  group_by(Ubicacion, Producto) %>%
+  summarise(TotalUnidades = sum(Cantidad), .groups = "drop") %>%
+  arrange(Ubicacion, desc(TotalUnidades)) %>%
+  group_by(Ubicacion) %>%
+  slice_head(n = 1) %>%
+  ungroup()
+
+# Mostrar resultados
+cat("### Productos más vendidos por día de la semana\n")
+print(top_por_dia)
+
+cat("\n### Productos más vendido por ubicación\n")
+print(top_por_ubi)
+
+
+
+```
+
+
+
+
+8. ¿A qué hora del día se realizan más compras?
 
 
 
@@ -744,7 +801,7 @@ ggplot(tickets_por_hora, aes(x = factor(Hora, levels = sort(unique(Hora))), y = 
 
 ```
 
-10. ¿Qué porcentaje de tickets incluye parking?
+9. ¿Qué porcentaje de tickets incluye parking?
 
 
 ```{r}
@@ -781,7 +838,7 @@ ggplot(parking_stats, aes(x = flag, y = pct, fill = flag)) +
 
 
 
-11. ¿Existe alguna relación entre la cantidad de productos y el parking?
+10. ¿Existe alguna relación entre la cantidad de productos y el parking?
 El objetivo de esta pregunta es ver si la cantidad total de productos comprados en un ticket guarda relación con si el cliente ontiene parking o no
 
 ```{r cantidad/parking, echo=FALSE, warning=FALSE, message=FALSE}
@@ -860,7 +917,7 @@ Esto sugiere que, según los datos disponibles, los clientes que realizan compra
 
 
 
-12. ¿Qué 10 productos muestran mayor variación de precio a lo largo del tiempo? ¿A qué categoría pertenecen?
+11. ¿Qué 10 productos muestran mayor variación de precio a lo largo del tiempo? ¿A qué categoría pertenecen?
 El objetivo de esta pregunta es identificar los productos cuyo precio ha cambiado más a lo largo del tiempo, y ver su categoría.
 
 ```{r top10-variacionprecio, echo=FALSE, warning=FALSE, message=FALSE}
@@ -904,7 +961,7 @@ ggplot(top10, aes(x = reorder(Producto, desv_std), y = desv_std)) +
 
 ```
 
-# 13.¿Qué ubicación tiene el ticket con mayor gasto total?
+# 12.¿Qué ubicación tiene el ticket con mayor gasto total?
 ```{r}
 # 1. Calcular el gasto total por ticket y ubicación
 tickets_ubicacion <- datos_integrados %>%
