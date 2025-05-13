@@ -73,6 +73,7 @@ Ahora cargaremos todas las librerias necesarias para la ejecución de este códi
 #Cargamos libreria pracma y los paquetes
 library(pracma)
 library(pdftools)
+library(lubridate)#date manipulation
 library('ggplot2') # visualization
 library('dplyr') # data manipulation
 library('tidyr') # data manipulation
@@ -311,7 +312,9 @@ ggplot(data = head(frecuencia_productos, 5), aes(x = n, y = Producto)) +
 
 
 ```
-Como podemos observar en el gráfico, los productos más vendidos por unidad son: Queso de lonchas de cabra, Queso Arzua, filete pechuga, bolsas de plástico y 12 huevos grandes talla L, siendo el más vendido el queso de lonchas de cabra.  
+Este código identifica los 5 productos más vendidos por unidades, contando su frecuencia de aparición en los datos (count(Producto)), y los visualiza en un gráfico de barras horizontales con colores personalizados. El gráfico destaca los productos (eje Y) y las unidades vendidas (eje X), usando un estilo minimalista (theme_void()) con texto en negrita para mejor legibilidad.
+
+Como podemos observar en el gráfico, los productos más vendidos por unidad son: Queso de lonchas de cabra, Queso Arzua, filete pechuga, bolsas de plástico y 12 huevos grandes talla L, siendo el más vendido el queso de lonchas de cabra. Los dos productos más vendidos por unidad son quesos, esto refleja una alta demanda de productos lácteos en la cesta media de compra en España.
 
 
 #2 Si consideramos la categoría de FRUTAS Y VERDURAS. Cuáles son los 5 productos más vendidos ? ¿Cuántos kilos se han vendido de cada uno de estos productos ?
@@ -348,8 +351,11 @@ ggplot(top_frutas_verduras, aes(x = reorder(Producto, Kilos_vendidos), y = Kilos
        x = "Producto",
        y = "Kilos vendidos") +
   theme_minimal()
-
 ```
+
+Este código identifica los 5 productos más vendidos en la categoría de frutas y verduras vendidos por peso (kg), filtrando los que incluyen "kg" en su nombre. Agrupa por producto, suma los kilos vendidos (sum(Cantidad)), y genera un gráfico de barras horizontales que muestra los productos (eje Y) y los kilos totales vendidos (eje X), con etiquetas numéricas para mayor claridad.
+
+En el grupo de frutas y verduras, destacan productos frescos como la naranja, la mandarina y el fresón. Esto indica una preferencia por frutas de temporada y productos a peso.
 
 
 #3 Si consideramos la categoría de PESCADO. Cuáles son los 5 productos más vendidos ? ¿Cuántos kilos se han vendido de cada uno de estos productos ?
@@ -387,6 +393,10 @@ ggplot(top_pescado_unidades, aes(x = reorder(Producto, Unidades_vendidas), y = U
   theme_minimal()
 ``` 
 
+Este código filtra productos de pescado, limpia los nombres para evitar duplicados, y calcula las unidades vendidas. Luego muestra los 5 productos más vendidos en un gráfico de barras horizontales azules, con las cantidades exactas indicadas.
+
+Los pescados más vendidos fueron el atún claro, palitos de merluza y escalopín de salmón, lo cual apunta a un consumo elevado de pescado en conserva o congelado frente al pescado fresco.
+
 
 # 4. Muestra mediante un gráfico de líneas como ha variado el precio por kilo de las bananas y los plátanos en los tickets disponibles, a lo largo del tiempo.
 
@@ -421,7 +431,10 @@ ggplot(top5_ciudades, aes(x = reorder(Ubicacion, n_tickets), y = n_tickets)) +
   ) +
   theme_minimal()
 ```
+Este código analiza la procedencia de los tickets de compra, limpiando y contando los códigos postales válidos para identificar las ciudades/pueblos con más tickets. Genera un top 5 de ubicaciones y lo visualiza en un gráfico de barras horizontales verdes con etiquetas blancas.
+
 Los tickets provienen de la ciudad de Valencia y 4 pueblos aledaños (Alboraia, Burjassot, Muro, Alcoi). Valencia (ciudad) tiene el mayor número de tickets (120), mientras que Alcoi tiene solo 22. 
+
 
 #6  Muestra mediante un diagrama el número de tickets recogidos cada día de las semana. ¿Si tuvieses que cerrar un día entre semana qué día lo harías ?
 ```{r tickets-diadelasemana, echo=TRUE, warning=FALSE, message=FALSE}
@@ -451,7 +464,10 @@ ggplot(tickets_por_dia, aes(x = DiaSemana, y = NumTickets, fill = DiaSemana)) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
+Este código analiza la distribución semanal de tickets de compra, identificando cuántos se registraron cada día (de lunes a domingo). Usa wday() para extraer el día de la semana y crea un gráfico de barras que muestra el volumen de tickets por día, con etiquetas numéricas para claridad.
+
 El día de la semana en donde se recogieron más tickets fue el sabado (80), mientras que el domingo fue el día en donde menos tickets se recogieron (1). Hay 43 tickets que no se saben que día se recogieron.  
+
 
 ## Preguntas Propuestas 
 # 1. ¿Cuál es el promedio de productos por ticket?
@@ -488,6 +504,12 @@ ggplot(tickets_productos, aes(x = n_productos)) +
   ) +
   theme_minimal()
 ```
+
+Este código calcula el promedio de productos por ticket agrupando los datos por ticket único (usando columnas como Supermercado, Fecha y Hora) y contando los productos en cada uno (n()). Luego genera:
+
+Un valor numérico del promedio
+
+Un histograma que muestra la distribución de productos/ticket, con una línea vertical que marca la media.
 
 
 #2. ¿Qué categoría representa el mayor porcentaje del gasto total?
@@ -569,6 +591,8 @@ ggplot(compras_por_dia, aes(x = Dia_Semana, y = Total_Compras, fill = Dia_Semana
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
+Este código analiza la distribución de compras por día de la semana, convirtiendo las fechas a formato Date y extrayendo el nombre del día (weekdays()). Agrupa los tickets únicos por día, suma el total de compras y genera un gráfico de barras que muestra el volumen de ventas para cada día, destacando el día con mayor actividad.
+
 Como podemos observar en el gráfico, el sábado es el dia de la semana en el que se concentran más compras.
 
 
@@ -615,6 +639,12 @@ ggplot(productos_unicos, aes(x = reorder(Producto_normalizado, Precio_Promedio),
   theme_minimal()
 ```
 
+Este código identifica los 5 productos más baratos vendidos por unidad (no por peso) mediante un proceso de normalización de nombres (eliminando espacios, estandarizando formato) y cálculo del precio unitario (precio_prod/Cantidad). Luego genera:
+
+Tabla con productos, precios promedio y frecuencia de compra
+
+Gráfico de barras horizontales que muestra los productos más económicos (eje Y) con su precio (eje X) y frecuencia de compra como etiqueta
+
 
 #5. ¿Qué porcentaje del gasto total se ha destinado a productos no alimentarios? ¿Qué tipo de productos destacan en ese grupo?
 ```{r productos-noaliment, echo=TRUE, warning=FALSE, message=FALSE}
@@ -660,6 +690,7 @@ ggplot(top_no_alimentarios, aes(x = reorder(Producto, Gasto_Total), y = Gasto_To
   ) +
   theme_minimal()
 ```
+Este código clasifica los productos en categorías Alimentario/No Alimentario (usando palabras clave como "detergente" o "papel"), calcula el porcentaje del gasto total en productos no alimentarios, e identifica y representa los 5 más relevantes en este grupo.
 
 Como podemos ver en el gráfico el producto (no alimentario) que genera más gasto es el "detergente Bla/col" con un gasto total de 11 euros, mientras que el que genera menos gasto es la "Gel lav. maqui" (10 euros). Los productos "Soja natural caja" y las esponjas con jabon generan el mismo gasto (9.6 euros).
 
@@ -687,6 +718,12 @@ correlacion <- cor(datos_relacion$Cantidad, datos_relacion$Precio_Unitario, use 
 correlacion_redon<- round(correlacion, 2)
 correlacion_redon
 ```
+
+Este código analiza la relación entre el precio unitario (precio_prod/Cantidad) y la cantidad comprada mediante:
+
+Un gráfico de dispersión (puntos azules) con línea de tendencia roja (geom_smooth)
+
+El cálculo del coeficiente de correlación
 
 
 #7 ¿Cuál es el producto más vendido por día de la semana? ¿Cuál es el producto más vendido por ubicación? 
@@ -735,6 +772,8 @@ cat("\n### Productos más vendido por ubicación\n")
 print(top_por_ubi)
 ```
 
+Este código identifica los productos más vendidos por día de la semana y ubicación, filtrando datos incompletos (NA) y agrupando por estas variables para sumar las cantidades vendidas. Para cada categoría (día/ubicación), selecciona el producto con mayor volumen de ventas (slice_head(n = 1)).
+
 
 8. ¿A qué hora del día se realizan más compras?
 ```{r}
@@ -753,6 +792,8 @@ ggplot(tickets_por_hora, aes(x = factor(Hora, levels = sort(unique(Hora))), y = 
   ) +
   theme_minimal()
 ```
+
+Este código analiza la distribución horaria de las compras, extrayendo la hora (sin minutos) de los tickets y contando su frecuencia. Genera un gráfico de barras azules que muestra las horas con mayor actividad comercial, destacando los picos de ventas.
 
 
 9. ¿Qué porcentaje de tickets incluye parking?
@@ -782,8 +823,14 @@ ggplot(parking_stats, aes(x = flag, y = pct, fill = flag)) +
   theme_minimal()
 ```
 
+Este código calcula el porcentaje de tickets que incluyen parking agrupando los datos según la columna booleana parking (TRUE/FALSE) y generando:
 
-10. ¿Existe alguna relación entre la cantidad de productos y el parking?
+Tabla con conteos y porcentajes
+
+Gráfico de barras (azul/rojo) que muestra visualmente el % de tickets con parking.
+
+
+#10. ¿Existe alguna relación entre la cantidad de productos y el parking?
 ```{r cantidad/parking, echo=FALSE, warning=FALSE, message=FALSE}
 # Crear el nuevo dataframe con las columnas correctas
 df_parking <- data.frame(
@@ -852,7 +899,7 @@ El gráfico muestra que el uso del parking está fuertemente concentrado en los 
 Esto sugiere que, según los datos disponibles, los clientes que realizan compras más voluminosas tienden a utilizar (o al menos registrar) el parking, mientras que quienes compran pocos productos apenas lo hacen. Sin embargo, es importante recordar que esta variable de parking se ha construido en base a la presencia de una línea específica en el ticket, por lo que puede no reflejar con total precisión el uso real del aparcamiento por parte del cliente.
 
 
-11. ¿Qué 10 productos muestran mayor variación de precio a lo largo del tiempo? ¿A qué categoría pertenecen?
+#11. ¿Qué 10 productos muestran mayor variación de precio a lo largo del tiempo? ¿A qué categoría pertenecen?
 ```{r top10-variacionprecio, echo=FALSE, warning=FALSE, message=FALSE}
 # Eliminar productos con precios NA o cero
 df_precios <- df %>%
@@ -890,6 +937,8 @@ ggplot(top10, aes(x = reorder(Producto, desv_std), y = desv_std)) +
 ```
 
 El objetivo de esta pregunta es identificar los productos cuyo precio ha cambiado más a lo largo del tiempo, y ver su categoría.
+Este código identifica los 10 productos con mayor variación de precios en el tiempo, calculando su desviación estándar (sd()) tras limpiar y estandarizar los nombres (minúsculas, sin espacios/puntuación). 
+Filtra productos con menos de 3 registros para asegurar significancia estadística.
 
 
 # 12.¿Qué ubicación tiene el ticket con mayor gasto total?
@@ -934,4 +983,8 @@ ggplot(top_ubicaciones, aes(x = reorder(Ubicacion, Max_gasto), y = Max_gasto)) +
   theme(plot.subtitle = element_text(face = "bold", color = "red"))
 ```
 
+Este código identifica la ubicación con el ticket de mayor gasto total, agrupando las compras por supermercado, fecha y hora para calcular el gasto por transacción. Luego:
 
+Muestra una tabla con el ticket récord
+
+Genera un gráfico de barras horizontales (azules) con el top 5 de ubicaciones con tickets más caros, destacando el máximo con etiquetas en euros.
