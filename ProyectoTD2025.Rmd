@@ -719,11 +719,36 @@ ggplot(tickets_por_hora, aes(x = factor(Hora, levels = sort(unique(Hora))), y = 
 
 ```
 
-10. ¿Cuál es el ticket con mayor gasto total y qué productos contiene?
+10. ¿Qué porcentaje de tickets incluye parking?
 
-<<<<<<< HEAD
 ```{r}
+library(dplyr)
+library(ggplot2)
+library(scales)
 
+# 1) Contar tickets con/sin parking
+parking_stats <- cabecera %>%
+  group_by(parking) %>%
+  summarise(count = n(), .groups = "drop") %>%
+  mutate(
+    pct  = count / sum(count) * 100,
+    flag = factor(parking, levels = c(FALSE, TRUE), labels = c("No", "Sí"))
+  )
+
+print(parking_stats)
+
+# 2) Gráfico de barras del porcentaje
+ggplot(parking_stats, aes(x = flag, y = pct, fill = flag)) +
+  geom_col(show.legend = FALSE) +
+  geom_text(aes(label = paste0(round(pct,1), "%")), 
+            vjust = -0.5, size = 5) +
+  scale_y_continuous(limits = c(0,100), labels = function(x) paste0(x, "%")) +
+  labs(
+    title = "Porcentaje de tickets con parking",
+    x     = "Parking incluido",
+    y     = "Porcentaje de tickets"
+  ) +
+  theme_minimal()
 
 
 ```
