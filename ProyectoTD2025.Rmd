@@ -397,8 +397,49 @@ Este código filtra productos de pescado, limpia los nombres para evitar duplica
 
 Los pescados más vendidos fueron el atún claro, palitos de merluza y escalopín de salmón, lo cual apunta a un consumo elevado de pescado en conserva o congelado frente al pescado fresco.
 
+#4 Muestra mediante un gráfico de líneas como ha variado el precio por kilo de las bananas y los plátanos en los tickets disponibles, a lo largo del tiempo.
 
-# 4. Muestra mediante un gráfico de líneas como ha variado el precio por kilo de las bananas y los plátanos en los tickets disponibles, a lo largo del tiempo.
+```{r}
+# Filtramos los productos cuyo nombre contiene "PLA," o "BA," (plátanos o bananas)
+productos_bananas <- datos_integrados %>%
+  filter(str_detect(Producto, "PLA,|BA,")) %>%
+  mutate(
+    # Extraemos el precio por kilo en formato "X,XX €/kg" y lo convertimos a número decimal
+    Precio_kg = Producto %>%
+      str_extract("\\d+[.,]\\d+\\s*€/kg") %>%   # extrae la parte del texto con el precio
+      str_remove("€/kg") %>%                    # elimina el texto "€/kg"
+      str_replace(",", ".") %>%                 # convierte coma en punto decimal
+      as.numeric(),                             # convierte a número
+
+    # Convertimos la columna Fecha al tipo Date (fecha)
+    Fecha = as.Date(Fecha, format = "%d/%m/%Y"),
+    
+    # Clasificamos los productos como "Banana" o "Plátano"
+    Fruta = case_when(
+      str_detect(Producto, " BA") ~ "Banana",
+      str_detect(Producto, " PLA") ~ "Plátano",
+      TRUE ~ NA_character_
+    )
+  ) %>%
+  # Filtramos solo las filas que tengan Precio_kg, Fecha y Fruta válidas
+  filter(!is.na(Precio_kg), !is.na(Fecha), !is.na(Fruta))
+
+# Mostramos el resultado para ver si se ha creado correctamente
+productos_bananas
+
+# Creamos el gráfico de evolución del precio por kg en el tiempo
+ggplot(productos_bananas, aes(x = Fecha, y = Precio_kg, color = Fruta)) +
+  geom_line(aes(group = Fruta)) +    # línea de tendencia por tipo de fruta
+  geom_point() +                     # puntos individuales por observación
+  labs(
+    title = "Evolución del precio por kg de bananas y plátanos",
+    x = "Fecha",
+    y = "Precio por kg (€)",
+    color = "Fruta"
+  )
+
+```
+Se ha analizado la evolución del precio por kilo de bananas y plátanos. Muchos registros no tenían fecha (Fecha = NA), lo que ha limitado los datos disponibles para el gráfico. Aun así, se ha podido visualizar la tendencia con los casos completos.
 
 #5 ¿ Cuál es la procedencia de los tickets ?¿ Qué ciudad/ pueblo tiene un mayor número de tickets ?
   
