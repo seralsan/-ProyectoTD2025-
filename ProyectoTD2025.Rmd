@@ -322,21 +322,31 @@ library(dplyr)
 library(ggplot2)
 library(stringr)
 
-# Paso 1: Filtrar solo productos vendidos "a peso" (que tenían 'kg' en la descripción original)
-frutas_verduras_peso <- datos_integrados %>%
+# Paso 1: Filtrar productos con 'kg' en el nombre
+frutas_verduras_peso <- df %>%
   filter(!is.na(Cantidad)) %>%
   filter(str_detect(tolower(Producto), "kg"))
 
-# Paso 2: Agrupar por producto y sumar kilos
+# Paso 2: Limpiar texto y convertir cantidad a numérico
+frutas_verduras_peso <- frutas_verduras_peso %>%
+  mutate(
+    Producto = tolower(Producto),
+    Producto = trimws(Producto),
+    Producto = gsub("\\.$", "", Producto),
+    Cantidad = as.numeric(Cantidad)  # ← 🔧 línea clave
+  ) %>%
+  filter(!is.na(Cantidad))  # Eliminar filas que no se hayan podido convertir
+
+# Paso 3: Agrupar y sumar kilos vendidos
 top_frutas_verduras <- frutas_verduras_peso %>%
   group_by(Producto) %>%
   summarise(Kilos_vendidos = sum(Cantidad)) %>%
   arrange(desc(Kilos_vendidos)) %>%
   slice_head(n = 5)
 
-# Paso 3: Gráfico
+# Paso 4: Gráfico
 ggplot(top_frutas_verduras, aes(x = reorder(Producto, Kilos_vendidos), y = Kilos_vendidos)) +
-  geom_col(fill = "darkgreen") +
+  geom_col(fill = "pink") +
   geom_text(aes(label = round(Kilos_vendidos, 1)), hjust = -0.1) +
   coord_flip() +
   labs(title = "Top 5 productos más vendidos (a peso)",
@@ -352,19 +362,32 @@ ggplot(top_frutas_verduras, aes(x = reorder(Producto, Kilos_vendidos), y = Kilos
 ```{r top-pescado, echo=TRUE, warning=FALSE, message=FALSE}
 library(dplyr)
 library(ggplot2)
+library(stringr)
 
-# Filtramos productos de pescado (sin filtrar por "kg" ahora)
-top_pescado_unidades <- datos_integrados %>%
-  filter(str_detect(tolower(Producto), "pescado|salmon|merluza|atun|bacalao|dorada|lubina|sardina|boqueron|rape")) %>%
+# Filtrar productos de pescado y limpiar nombres
+top_pescado_unidades <- df %>%
+  filter(str_detect(tolower(Producto),
+  "\\b(pescado|salmon|merluza|atun|bacalao|dorada|lubina|sardina|boqueron|rape)\\b")) %>%
+  filter(!str_detect(tolower(Producto), "pizza|galleta|maria")) %>%  
+  #justo esas palabras daban error (por ej. pizza de atun y bacon o galletas maria doradas) asi que hacemos que las ignore
+  mutate(
+    Cantidad = as.numeric(Cantidad),
+    Producto = tolower(Producto),
+    Producto = trimws(Producto),  # eliminar espacios extra
+    Producto = gsub("\\s+", " ", Producto),  # unificar espacios múltiples
+    Producto = gsub("[[:punct:]]", "", Producto)  # eliminar puntos, comas, etc.
+    #asi evitamos repeticiones
+  ) %>%
+  filter(!is.na(Cantidad)) %>%
   group_by(Producto) %>%
-  summarise(Unidades_vendidas = sum(Cantidad)) %>%  # Suma unidades, no kilos
+  summarise(Unidades_vendidas = sum(Cantidad)) %>%
   arrange(desc(Unidades_vendidas)) %>%
   slice_head(n = 5)
 
-# Gráfico de unidades
+# Gráfico
 ggplot(top_pescado_unidades, aes(x = reorder(Producto, Unidades_vendidas), y = Unidades_vendidas)) +
   geom_col(fill = "#1f77b4") +
-  geom_text(aes(label = Unidades_vendidas), hjust = -0.1) +
+  geom_text(aes(label = round(Unidades_vendidas, 1)), hjust = -0.1) +
   coord_flip() +
   labs(
     title = "Top 5 productos de PESCADO por unidades vendidas",
@@ -372,12 +395,14 @@ ggplot(top_pescado_unidades, aes(x = reorder(Producto, Unidades_vendidas), y = U
     y = "Unidades vendidas"
   ) +
   theme_minimal()
+
+
 ``` 
 
 
 #5 ¿ Cuál es la procedencia de los tickets ?¿ Qué ciudad/ pueblo tiene un mayor número de tickets ?
   
-```{r}
+```{r procedencia-tickets, echo=TRUE, warning=FALSE, message=FALSE}
 
 # 0) Limpiar Ubicacion — sólo nos quedamos con CP numérico
 tickets_unicos_clean <- datos_integrados %>%
@@ -413,7 +438,8 @@ ggplot(top5_ciudades, aes(x = reorder(Ubicacion, n_tickets), y = n_tickets)) +
 Los tickets provienen de la ciudad de Valencia y 4 pueblos aledaños (Alboraia, Burjassot, Muro, Alcoi). Valencia (ciudad) tiene el mayor número de tickets (120), mientras que Alcoi tiene solo 22. 
 
 #6  Muestra mediante un diagrama el número de tickets recogidos cada día de las semana. ¿Si tuvieses que cerrar un día entre semana qué día lo harías ?
-```{r}
+```{r tickets-diadelasemana, echo=TRUE, warning=FALSE, message=FALSE}
+library(lubridate)
 # 1) Extraer un registro por ticket (evitamos duplicados por producto)
 tickets_unicos <- datos_integrados %>%
   distinct(Supermercado, Calle, CP, Ubicacion, Fecha, Hora)
@@ -446,9 +472,7 @@ El día de la semana en donde se recogieron más tickets fue el sabado (80), mie
 
 ## Preguntas Propuestas 
 # 1. ¿Cuál es el promedio de productos por ticket?
-```{r}
-
-
+```{r prep-promedio-productos-ticket, echo=TRUE, warning=FALSE, message=FALSE}
 # Suponiendo que 'df' tiene todas las filas de productos con sus columnas de cabecera:
 promedio_por_ticket <- df %>%
   # Agrupar por un identificador único de ticket; aquí usamos todas las columnas de cabecera
@@ -460,7 +484,7 @@ promedio_por_ticket
 
 ```
 
-```{r}
+```{r promedio-productos-ticket, echo=TRUE, warning=FALSE, message=FALSE}
 
 # 1) Calcular nº de productos por ticket
 tickets_productos <- df %>% 
@@ -485,7 +509,7 @@ ggplot(tickets_productos, aes(x = n_productos)) +
 ```
 
 #2. ¿Qué categoría representa el mayor porcentaje del gasto total?
-```{r}
+```{r categoria-mayor-porcentaje-gasto, echo=TRUE, warning=FALSE, message=FALSE}
 library(dplyr)
 library(stringr)
 
@@ -531,7 +555,7 @@ ggplot(gasto_por_categoria, aes(x = reorder(Categoria, -Porcentaje), y = Porcent
 ```
 
 #3. ¿Qué días de la semana concentran más compras?
-```{r}
+```{r dia-mascompras, echo=TRUE, warning=FALSE, message=FALSE}
 library(lubridate)  # Para manejo de fechas
 
 # Convertir Fecha a tipo Date y extraer día de la semana
@@ -570,7 +594,7 @@ ggplot(compras_por_dia, aes(x = Dia_Semana, y = Total_Compras, fill = Dia_Semana
 Como podemos observar en el gráfico, el sábado es el dia de la semana en el que se concentran más compras.
 
 #4. ¿Cuáles son los 5 productos más baratos comprados por unidad? ¿Con qué frecuencia se compran?
-```{r}
+```{r top5-productos-baratos, echo=TRUE, warning=FALSE, message=FALSE}
 library(dplyr)
 library(ggplot2)
 library(stringr)
@@ -619,7 +643,7 @@ ggplot(productos_unicos, aes(x = reorder(Producto_normalizado, Precio_Promedio),
 #5. ¿Qué porcentaje del gasto total se ha destinado a productos no alimentarios? ¿Qué tipo de productos destacan en ese grupo?
 
 
-```{r}
+```{r productos-noaliment, echo=TRUE, warning=FALSE, message=FALSE}
 library(dplyr)
 library(stringr)
 library(ggplot2)
@@ -674,7 +698,7 @@ Como podemos ver en el gráfico el producto (no alimentario) que genera más gas
 =======
 
 #6.¿Hay relación entre el precio y la cantidad comprada?
-```{r}
+```{r precio-cantidad, echo=TRUE, warning=FALSE, message=FALSE}
 # Filtrar datos relevantes y calcular el precio unitario
 datos_relacion <- datos_integrados %>%
   filter(!is.na(Cantidad), Cantidad > 0, !is.na(precio_prod)) %>%
@@ -700,6 +724,7 @@ correlacion_redon
 
 9. ¿A qué hora del día se realizan más compras?
 
+<<<<<<< HEAD
 ```{r}
 
 # Extraer la hora (parte antes de “:”) y contar tickets
@@ -720,6 +745,9 @@ ggplot(tickets_por_hora, aes(x = factor(Hora, levels = sort(unique(Hora))), y = 
 ```
 
 10. ¿Qué porcentaje de tickets incluye parking?
+=======
+10. ¿Cuál es el ticket con mayor gasto total y qué productos contiene?
+>>>>>>> 77dcd6176d0ccaa9fa5259b88b12959e1c781e68
 
 ```{r}
 library(dplyr)
@@ -758,39 +786,7 @@ ggplot(parking_stats, aes(x = flag, y = pct, fill = flag)) +
 11. ¿Existe alguna relación entre la cantidad de productos y el parking?
 El objetivo de esta pregunta es ver si la cantidad total de productos comprados en un ticket guarda relación con si el cliente ontiene parking o no
 
-```{r}
-# Convertir la columna Cantidad a numérico (puede haber errores por tickets mal procesados)
-df_limpio <- df %>%
-  mutate(Cantidad = as.numeric(Cantidad)) %>%
-  filter(!is.na(Cantidad))  # Eliminar filas con errores en la conversión
-
-# Agrupar por ticket (usamos Supermercado + Fecha + Hora como identificador) y parking
-productos_por_ticket <- df_limpio %>%
-  group_by(Supermercado, Fecha, Hora, parking) %>%
-  summarise(Cantidad_total = sum(Cantidad), .groups = "drop")
-
-# Visualizar la relación con un boxplot
-ggplot(productos_por_ticket, aes(x = parking, y = Cantidad_total)) +
-  geom_boxplot() +
-  labs(
-    title = "Cantidad de productos según uso de parking",
-    x = "¿Usó parking?",
-    y = "Cantidad total de productos"
-  )
-
-# Prueba t de diferencia de medias entre grupos (parking: sí/no)
-t.test(Cantidad_total ~ parking, data = productos_por_ticket)
-
-table(df$parking)
-
-df %>% filter(parking == TRUE) %>% select(Producto, Cantidad, precio_prod, Supermercado, Fecha)
-
-```
-
-12. ¿Qué productos muestran mayor variación de precio a lo largo del tiempo? ¿A qué categoría pertenecen?
-El objetivo de esta pregunta es identificar los productos cuyo precio ha cambiado más a lo largo del tiempo, y ver su categoría.
-
-```{r, echo=FALSE, warning=FALSE, message=FALSE}
+```{r cantidad/parking, echo=FALSE, warning=FALSE, message=FALSE}
 library(dplyr)
 
 # Crear el nuevo dataframe con las columnas correctas
@@ -805,7 +801,7 @@ df_parking <- data.frame(
 df_parking <- df_parking %>% filter(!is.na(Cantidad))
 
 # Sumar cantidad total por ticket (por Total)
-suma_cantidad <- aggregate(Cantidad ~ Total, data = df_9, sum)
+suma_cantidad <- aggregate(Cantidad ~ Total, data = df_parking, sum)
 
 # Marcar si algún producto del ticket tiene parking (Producto = "PARKING")
 nuevo_df <- df_parking %>%
@@ -864,4 +860,54 @@ El gráfico muestra que el uso del parking está fuertemente concentrado en los 
 Esto sugiere que, según los datos disponibles, los clientes que realizan compras más voluminosas tienden a utilizar (o al menos registrar) el parking, mientras que quienes compran pocos productos apenas lo hacen. Sin embargo, es importante recordar que esta variable de parking se ha construido en base a la presencia de una línea específica en el ticket, por lo que puede no reflejar con total precisión el uso real del aparcamiento por parte del cliente.
 
 
+<<<<<<< HEAD
 >>>>>>> 6c8e91057f9f40299df9a6f29a7986c4c4ba2a52
+=======
+
+
+12. ¿Qué 10 productos muestran mayor variación de precio a lo largo del tiempo? ¿A qué categoría pertenecen?
+El objetivo de esta pregunta es identificar los productos cuyo precio ha cambiado más a lo largo del tiempo, y ver su categoría.
+
+```{r top10-variacionprecio, echo=FALSE, warning=FALSE, message=FALSE}
+library(dplyr)
+library(ggplot2)
+
+# Eliminar productos con precios NA o cero
+df_precios <- df %>%
+  filter(!is.na(precio_prod), precio_prod > 0) %>%
+  mutate(
+    Producto = tolower(Producto),            # pasar todo a minúsculas
+    Producto = trimws(Producto),             # eliminar espacios extra
+    Producto = gsub("\\s+", " ", Producto),  # unificar espacios múltiples
+    Producto = gsub("[[:punct:]]", "", Producto)  # eliminar puntos, comas, etc.
+  )
+
+# Calcular la desviación estándar por producto
+variacion_precios <- df_precios %>%
+  group_by(Producto) %>%
+  summarise(
+    desv_std = sd(precio_prod, na.rm = TRUE),
+    media_precio = mean(precio_prod, na.rm = TRUE),
+    n = n()
+  ) %>%
+  filter(n >= 3) %>%
+  arrange(desc(desv_std))
+
+# Mostrar top 10 productos
+top10 <- head(variacion_precios, 10)
+
+# Gráfico
+ggplot(top10, aes(x = reorder(Producto, desv_std), y = desv_std)) +
+  geom_col(fill = "blue") +
+  coord_flip() +
+  labs(
+    title = "Top 10 productos con mayor variación de precio",
+    x = "Producto",
+    y = "Desviación estándar del precio"
+  ) +
+  theme_minimal()
+
+```
+
+
+>>>>>>> 77dcd6176d0ccaa9fa5259b88b12959e1c781e68
