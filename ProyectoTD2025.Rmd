@@ -758,30 +758,7 @@ ggplot(tickets_por_hora, aes(x = factor(Hora, levels = sort(unique(Hora))), y = 
 10. ¿Cuál es el ticket con mayor gasto total y qué productos contiene?
 
 ```{r}
-library(dplyr)
 
-# 1) Reconstruimos cabecera y le damos un ticket_id
-cabecera2 <- df %>%
-  group_by(Supermercado, Calle, CP, Ubicacion, Telefono, Fecha, Hora) %>%
-  summarise(Total = unique(Total), .groups = "drop") %>%
-  mutate(ticket_id = row_number())
-
-# 2) Unimos ese ticket_id de vuelta al df de productos
-df_id <- df %>%
-  left_join(cabecera2, by = c("Supermercado","Calle","CP","Ubicacion","Telefono","Fecha","Hora"))
-
-# 3) Identificamos el ticket_id con mayor gasto
-ticket_mayor_id <- cabecera2 %>%
-  arrange(desc(Total)) %>%
-  slice(1) %>%
-  pull(ticket_id)
-
-# 4) Extraemos los productos de ese ticket
-productos_ticket_mayor <- df_id %>%
-  filter(ticket_id == ticket_mayor_id) %>%
-  select(Producto, Cantidad, precio_prod)
-
-print(productos_ticket_mayor)
 
 
 ```
