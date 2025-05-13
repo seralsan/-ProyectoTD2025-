@@ -280,7 +280,7 @@ Preguntas propuestas:
 7. ¿Cuál es el producto más vendido por día de la semana? ¿Cuál es el producto más vendido por ubicación?
 8. ¿Cómo varía el gasto promedio por ticket según la ciudad o pueblo donde se realiza la compra?
 9. ¿A qué hora del día se realizan más compras?
-10. ¿Cuál es el ticket con mayor gasto total y qué productos contiene?
+10. ¿Qué porcentaje de tickets incluye parking?
 11. ¿Existe alguna relación entre la cantidad de productos y el parking?
 12. ¿Qué productos muestran mayor variación de precio a lo largo del tiempo? ¿A qué categoría pertenecen?
 
