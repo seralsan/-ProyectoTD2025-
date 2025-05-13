@@ -760,11 +760,10 @@ correlacion_redon<- round(correlacion, 2)
 correlacion_redon
 ```
 
-Este código analiza la relación entre el precio unitario (precio_prod/Cantidad) y la cantidad comprada mediante:
+Este código analiza la relación entre el precio unitario (precio_prod/Cantidad) y la cantidad comprada mediante: un gráfico de dispersión (puntos azules) con línea de tendencia roja (geom_smooth) y el cálculo del coeficiente de correlación.
 
-Un gráfico de dispersión (puntos azules) con línea de tendencia roja (geom_smooth)
-
-El cálculo del coeficiente de correlación
+El gráfico de dispersión muestra una nube de puntos azules donde cada punto representa un producto. La línea roja (tendencia lineal) tiene una ligera pendiente descendente, lo que sugiere que: a mayor cantidad comprada, menor precio unitario (relación inversa). Esto refleja posibles descuentos por volumen.
+La dispersión de puntos sugiere que otros factores (como tipo de producto o promociones) influyen más en el precio unitario.
 
 
 #7 ¿Cuál es el producto más vendido por día de la semana? ¿Cuál es el producto más vendido por ubicación? 
