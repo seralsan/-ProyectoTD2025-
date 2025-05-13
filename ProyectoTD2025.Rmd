@@ -12,7 +12,9 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Introducción
 
-Relización del proyecto en la asignatura: Tratamiento de los Datos, del grado de Ciencia de Datos del primer curso. La finalidad de este proyecto es la realización de un análisis exploratorio de los datos que se han recopilado en varios tickets de Mercadona.
+Este proyecto se enmarca en la asignatura Tratamiento de los Datos del Grado en Ciencia de Datos de la Universitat de València. Su principal objetivo es aplicar técnicas de manipulación, limpieza y análisis exploratorio de datos utilizando como fuente real los tickets de compra emitidos por supermercados de una misma cadena comercial, en este caso, Mercadona.
+
+A partir de los tickets recogidos, se desarrolla un proceso de análisis que incluye la importación y estructuración de datos no estructurados, la extracción de información relevante (productos, cantidades, precios, fechas, etc.), y su posterior organización en un conjunto de datos homogéneo. Esto permite realizar estudios cuantitativos como el seguimiento del gasto, la frecuencia de productos, patrones de compra, evolución de precios, comparativas por categorías, entre otros.
 
 # Base del estudio y recopilación de datos
 
@@ -275,6 +277,13 @@ Preguntas propuestas:
 3. ¿Qué días de la semana concentran más compras?
 4. ¿Cuáles son los 5 productos más baratos comprados por unidad? ¿Con qué frecuencia se compran?
 5. ¿Qué porcentaje del gasto total se ha destinado a productos no alimentarios? ¿Qué tipo de productos destacan en ese grupo?
+6.¿Hay relación entre el precio y la cantidad comprada?
+7. ¿Cuál es el producto más vendido por día de la semana? ¿Cuál es el producto más vendido por ubicación? 
+8. ¿Cómo varía el gasto promedio por ticket según la ciudad o pueblo donde se realiza la compra?
+9. ¿A qué hora del día se realizan más compras?
+10. ¿Cuál es el ticket con mayor gasto total y qué productos contiene?
+>>>>>>> 27bc343ef7940424346e2c5f296ac1965758d30b
+
 ## Preguntas Obligatorias
 
 #1. ¿Cuáles son los 5 productos, de los vendidos por unidades, con más ventas ? ¿Cuántas unidades de cada uno se han vendido ?
@@ -338,8 +347,6 @@ ggplot(top_frutas_verduras, aes(x = reorder(Producto, Kilos_vendidos), y = Kilos
 
 
 #3 Si consideramos la categoría de PESCADO. Cuáles son los 5 productos más vendidos ? ¿Cuántos kilos se han vendido de cada uno de estos productos ?
-
-```{r}
 library(dplyr)
 library(ggplot2)
 
@@ -362,7 +369,76 @@ ggplot(top_pescado_unidades, aes(x = reorder(Producto, Unidades_vendidas), y = U
     y = "Unidades vendidas"
   ) +
   theme_minimal()
+  
+#5 ¿ Cuál es la procedencia de los tickets ?¿ Qué ciudad/ pueblo tiene un mayor número de tickets ?
+  
+```{r}
+
+# 0) Limpiar Ubicacion — sólo nos quedamos con CP numérico
+tickets_unicos_clean <- datos_integrados %>%
+  distinct(Supermercado, Calle, CP, Ubicacion, Fecha, Hora) %>%
+  # Convertimos CP a numérico: los no válidos (cabeceras) se vuelven NA
+  mutate(CP_num = suppressWarnings(as.integer(CP))) %>%
+  # Nos quedamos sólo con los que tengan CP válido
+  filter(!is.na(CP_num)) %>%
+  select(-CP_num)
+
+# 1) Contar tickets por ciudad/pueblo (ahora limpio)
+tickets_por_ciudad <- tickets_unicos_clean %>%
+  count(Ubicacion, name = "n_tickets") %>%
+  arrange(desc(n_tickets))
+
+# 2) Top 5 y gráfico
+top5_ciudades <- tickets_por_ciudad %>% slice_head(n = 5)
+print(top5_ciudades)
+
+ggplot(top5_ciudades, aes(x = reorder(Ubicacion, n_tickets), y = n_tickets)) +
+  geom_col(fill = "#69b3a2") +
+  coord_flip() +
+  geom_text(aes(label = n_tickets), hjust = 1.2, color = "white") +
+  labs(
+    title = "Top 5 ciudades/pueblos según número de tickets",
+    x     = "Ciudad / Pueblo",
+    y     = "Número de tickets"
+  ) +
+  theme_minimal()
+
+
 ```
+Los tickets provienen de la ciudad de Valencia y 4 pueblos aledaños (Alboraia, Burjassot, Muro, Alcoi). Valencia (ciudad) tiene el mayor número de tickets (120), mientras que Alcoi tiene solo 22. 
+
+#6  Muestra mediante un diagrama el número de tickets recogidos cada día de las semana. ¿Si tuvieses que cerrar un día entre semana qué día lo harías ?
+```{r}
+# 1) Extraer un registro por ticket (evitamos duplicados por producto)
+tickets_unicos <- datos_integrados %>%
+  distinct(Supermercado, Calle, CP, Ubicacion, Fecha, Hora)
+
+# 2) Convertir Fecha a Date y extraer día de la semana (lunes=1, …, domingo=7)
+tickets_por_dia <- tickets_unicos %>%
+  mutate(
+    Fecha = as.Date(Fecha, format = "%d/%m/%Y"),
+    DiaSemana = wday(Fecha, label = TRUE, abbr = FALSE, week_start = 1)
+  ) %>%
+  count(DiaSemana, name = "NumTickets") %>%
+  arrange(match(DiaSemana,
+                c("lunes","martes","miércoles","jueves","viernes","sábado","domingo")))
+
+# 3) Gráfico de barras
+ggplot(tickets_por_dia, aes(x = DiaSemana, y = NumTickets, fill = DiaSemana)) +
+  geom_col(show.legend = FALSE) +
+  geom_text(aes(label = NumTickets), vjust = -0.5) +
+  labs(
+    title = "Número de tickets recogidos por día de la semana",
+    x = "Día de la semana",
+    y = "Número de tickets"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+
+```
+El día de la semana en donde se recogieron más tickets fue el sabado (80), mientras que el domingo fue el día en donde menos tickets se recogieron (1). Hay 43 tickets que no se saben que día se recogieron.  
+
 ## Preguntas Propuestas 
 # 1. ¿Cuál es el promedio de productos por ticket?
 ```{r}
@@ -378,6 +454,7 @@ promedio_por_ticket <- df %>%
 promedio_por_ticket
 
 ```
+
 ```{r}
 
 
@@ -534,3 +611,93 @@ ggplot(productos_unicos, aes(x = reorder(Producto_normalizado, Precio_Promedio),
   ) +
   theme_minimal()
 ```
+<<<<<<< HEAD
+#5. ¿Qué porcentaje del gasto total se ha destinado a productos no alimentarios? ¿Qué tipo de productos destacan en ese grupo?
+
+
+```{r}
+library(dplyr)
+library(stringr)
+library(ggplot2)
+
+# Clasificación de categorías, incluyendo "No Alimentario"
+datos_categorizados <- datos_integrados %>%
+  mutate(
+    Categoria = case_when(
+      str_detect(tolower(Producto), "servilleta|papel|fregona|estropajo|bolsa|detergente|bayeta|gel|suavizante|higiénico|aluminio|film|cepillo|cubo|ambientador|esponja|báscula|menaje|botella|caja|vela|tupper") ~ "No Alimentario",
+      TRUE ~ "Alimentario"
+    )
+  )
+
+# Calcular gasto total y porcentaje
+gasto_por_categoria <- datos_categorizados %>%
+  filter(!is.na(precio_prod), !is.na(Cantidad)) %>%
+  mutate(Gasto = precio_prod * Cantidad) %>%
+  group_by(Categoria) %>%
+  summarise(Gasto_Total = sum(Gasto, na.rm = TRUE)) %>%
+  mutate(Porcentaje = round(100 * Gasto_Total / sum(Gasto_Total), 2))
+
+# Mostrar porcentaje destinado a productos no alimentarios
+print(gasto_por_categoria)
+
+# Productos no alimentarios destacados
+top_no_alimentarios <- datos_categorizados %>%
+  filter(Categoria == "No Alimentario", !is.na(precio_prod), !is.na(Cantidad)) %>%
+  mutate(Gasto = precio_prod * Cantidad) %>%
+  group_by(Producto) %>%
+  summarise(Gasto_Total = sum(Gasto, na.rm = TRUE)) %>%
+  arrange(desc(Gasto_Total)) %>%
+  slice_head(n = 5)
+
+# Mostrar productos destacados
+print(top_no_alimentarios)
+
+# Gráfico de productos no alimentarios más relevantes
+ggplot(top_no_alimentarios, aes(x = reorder(Producto, Gasto_Total), y = Gasto_Total)) +
+  geom_col(fill = "#FF7F0E") +
+  coord_flip() +
+  geom_text(aes(label = round(Gasto_Total, 2)), hjust = -0.1) +
+  labs(
+    title = "Top 5 productos no alimentarios por gasto",
+    x = "Producto",
+    y = "Gasto total (€)"
+  ) +
+  theme_minimal()
+
+```
+Como podemos ver en el gráfico el producto (no alimentario) que genera más gasto es el "detergente Bla/col" con un gasto total de 11 euros, mientras que el que genera menos gasto es la "Gel lav. maqui" (10 euros). Los productos "Soja natural caja" y las esponjas con jabon generan el mismo gasto (9.6 euros).
+
+=======
+
+#6.¿Hay relación entre el precio y la cantidad comprada?
+```{r}
+# Filtrar datos relevantes y calcular el precio unitario
+datos_relacion <- datos_integrados %>%
+  filter(!is.na(Cantidad), Cantidad > 0, !is.na(precio_prod)) %>%
+  mutate(Precio_Unitario = precio_prod / Cantidad)
+
+# Gráfico de dispersión para visualizar la relación
+ggplot(datos_relacion, aes(x = Cantidad, y = Precio_Unitario)) +
+  geom_point(alpha = 0.5, color = "blue") +
+  geom_smooth(method = "lm", color = "red", se = FALSE) +
+  labs(
+    title = "Relación entre Precio Unitario y Cantidad Comprada",
+    x = "Cantidad Comprada",
+    y = "Precio Unitario (€)"
+  ) +
+  theme_minimal()
+
+# Cálculo de la correlación
+correlacion <- cor(datos_relacion$Cantidad, datos_relacion$Precio_Unitario, use = "complete.obs")
+correlacion_redon<- round(correlacion, 2)
+correlacion_redon
+```
+>>>>>>> 27bc343ef7940424346e2c5f296ac1965758d30b
+
+9. ¿A qué hora del día se realizan más compras?
+
+```{r}
+
+```
+
+10. ¿Cuál es el ticket con mayor gasto total y qué productos contiene?
