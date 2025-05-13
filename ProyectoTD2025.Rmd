@@ -282,7 +282,7 @@ Preguntas propuestas:
 8. ¿A qué hora del día se realizan más compras?
 9. ¿Qué porcentaje de tickets incluye parking?
 10. ¿Existe alguna relación entre la cantidad de productos y el parking?
-11. ¿Qué productos muestran mayor variación de precio a lo largo del tiempo? ¿A qué categoría pertenecen?
+11. ¿Qué 10 productos muestran mayor variación de precio a lo largo del tiempo? ¿A qué categoría pertenecen?
 12. ¿Qué ubicación tiene el ticket con mayor gasto total?
 
 
