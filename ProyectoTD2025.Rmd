@@ -258,17 +258,16 @@ Productos <- Productos %>% filter(!is.na(Cantidad))
 
 
 ```
+
+Preguntas: 
+
 1. ¿Cuáles son los 5 productos, de los vendidos por unidades, con más ventas ? ¿Cuántas unidades de cada uno se han vendido ?
-
 2. Si consideramos la categoría de FRUTAS Y VERDURAS. Cuáles son los 5 productos más vendidos ? ¿Cuántos kilos se han vendido de cada uno de estos productos ?
-
 3. Si consideramos la categoría de PESCADO. Cuáles son los 5 productos más vendidos ? ¿Cuántos kilos se han vendido de cada uno de estos productos ?
-
 4. Muestra mediante un gráfico de líneas como ha variado el precio por kilo de las bananas y los plátanos en los tickets disponibles, a lo largo del tiempo.
-
 5. ¿ Cuál es la procedencia de los tickets ?¿ Qué ciudad/ pueblo tiene un mayor número de tickets ?
-
 6. Muestra mediante un diagrama el número de tickets recogidos cada día de las semana. ¿Si tuvieses que cerrar un día entre semana qué día lo harías ?
+
 
 Preguntas propuestas:
 
@@ -282,6 +281,9 @@ Preguntas propuestas:
 8. ¿Cómo varía el gasto promedio por ticket según la ciudad o pueblo donde se realiza la compra?
 9. ¿A qué hora del día se realizan más compras?
 10. ¿Cuál es el ticket con mayor gasto total y qué productos contiene?
+11. ¿Existe alguna relación entre la cantidad de productos y el parking?
+12. ¿Qué productos muestran mayor variación de precio a lo largo del tiempo? ¿A qué categoría pertenecen?
+
 >>>>>>> 27bc343ef7940424346e2c5f296ac1965758d30b
 
 ## Preguntas Obligatorias
@@ -347,6 +349,7 @@ ggplot(top_frutas_verduras, aes(x = reorder(Producto, Kilos_vendidos), y = Kilos
 
 
 #3 Si consideramos la categoría de PESCADO. Cuáles son los 5 productos más vendidos ? ¿Cuántos kilos se han vendido de cada uno de estos productos ?
+```{r top-pescado, echo=TRUE, warning=FALSE, message=FALSE}
 library(dplyr)
 library(ggplot2)
 
@@ -369,7 +372,9 @@ ggplot(top_pescado_unidades, aes(x = reorder(Producto, Unidades_vendidas), y = U
     y = "Unidades vendidas"
   ) +
   theme_minimal()
-  
+``` 
+
+
 #5 ¿ Cuál es la procedencia de los tickets ?¿ Qué ciudad/ pueblo tiene un mayor número de tickets ?
   
 ```{r}
@@ -456,7 +461,6 @@ promedio_por_ticket
 ```
 
 ```{r}
-
 
 # 1) Calcular nº de productos por ticket
 tickets_productos <- df %>% 
