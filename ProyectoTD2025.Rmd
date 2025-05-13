@@ -818,11 +818,17 @@ El objetivo de esta pregunta es identificar los productos cuyo precio ha cambiad
 library(dplyr)
 library(ggplot2)
 
-# Eliminar productos con precios NA o cero (si deseas ignorarlos)
+# Eliminar productos con precios NA o cero
 df_precios <- df %>%
-  filter(!is.na(precio_prod), precio_prod > 0)
+  filter(!is.na(precio_prod), precio_prod > 0) %>%
+  mutate(
+    Producto = tolower(Producto),            # pasar todo a minúsculas
+    Producto = trimws(Producto),             # eliminar espacios extra
+    Producto = gsub("\\s+", " ", Producto),  # unificar espacios múltiples
+    Producto = gsub("[[:punct:]]", "", Producto)  # eliminar puntos, comas, etc.
+  )
 
-# Calcular desviación estándar del precio por producto
+# Calcular la desviación estándar por producto
 variacion_precios <- df_precios %>%
   group_by(Producto) %>%
   summarise(
@@ -830,13 +836,13 @@ variacion_precios <- df_precios %>%
     media_precio = mean(precio_prod, na.rm = TRUE),
     n = n()
   ) %>%
-  filter(n >= 3) %>%  # Evitar productos con muy pocas observaciones
+  filter(n >= 3) %>%
   arrange(desc(desv_std))
 
-# Mostrar los 10 productos con mayor variación
+# Mostrar top 10 productos
 top10 <- head(variacion_precios, 10)
 
-# Gráfico de barras
+# Gráfico
 ggplot(top10, aes(x = reorder(Producto, desv_std), y = desv_std)) +
   geom_col(fill = "blue") +
   coord_flip() +
@@ -846,6 +852,7 @@ ggplot(top10, aes(x = reorder(Producto, desv_std), y = desv_std)) +
     y = "Desviación estándar del precio"
   ) +
   theme_minimal()
+
 ```
 
 
