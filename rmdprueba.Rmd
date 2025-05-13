@@ -73,9 +73,11 @@ library('modelr') # factor manipulation
 
 
 #Libreria PDF 
-library("pdftools")
+library(pdftools)
+
 
 ```
+
 
 
 
