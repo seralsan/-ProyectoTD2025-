@@ -277,7 +277,7 @@ Preguntas propuestas:
 4. ¿Cuáles son los 5 productos más baratos comprados por unidad? ¿Con qué frecuencia se compran?
 5. ¿Qué porcentaje del gasto total se ha destinado a productos no alimentarios? ¿Qué tipo de productos destacan en ese grupo?
 6.¿Hay relación entre el precio y la cantidad comprada?
-7. ¿Cuál es el producto más vendido por día de la semana? ¿Cuál es el producto más vendido por ubicación? 
+7. ¿Cuál es el producto más vendido por día de la semana? ¿Cuál es el producto más vendido por ubicación?
 8. ¿Cómo varía el gasto promedio por ticket según la ciudad o pueblo donde se realiza la compra?
 9. ¿A qué hora del día se realizan más compras?
 10. ¿Cuál es el ticket con mayor gasto total y qué productos contiene?
@@ -705,3 +705,114 @@ correlacion_redon
 ```
 
 10. ¿Cuál es el ticket con mayor gasto total y qué productos contiene?
+
+
+11. ¿Existe alguna relación entre la cantidad de productos y el parking?
+El objetivo de esta pregunta es ver si la cantidad total de productos comprados en un ticket guarda relación con si el cliente ontiene parking o no
+
+```{r}
+# Convertir la columna Cantidad a numérico (puede haber errores por tickets mal procesados)
+df_limpio <- df %>%
+  mutate(Cantidad = as.numeric(Cantidad)) %>%
+  filter(!is.na(Cantidad))  # Eliminar filas con errores en la conversión
+
+# Agrupar por ticket (usamos Supermercado + Fecha + Hora como identificador) y parking
+productos_por_ticket <- df_limpio %>%
+  group_by(Supermercado, Fecha, Hora, parking) %>%
+  summarise(Cantidad_total = sum(Cantidad), .groups = "drop")
+
+# Visualizar la relación con un boxplot
+ggplot(productos_por_ticket, aes(x = parking, y = Cantidad_total)) +
+  geom_boxplot() +
+  labs(
+    title = "Cantidad de productos según uso de parking",
+    x = "¿Usó parking?",
+    y = "Cantidad total de productos"
+  )
+
+# Prueba t de diferencia de medias entre grupos (parking: sí/no)
+t.test(Cantidad_total ~ parking, data = productos_por_ticket)
+
+table(df$parking)
+
+df %>% filter(parking == TRUE) %>% select(Producto, Cantidad, precio_prod, Supermercado, Fecha)
+
+```
+
+12. ¿Qué productos muestran mayor variación de precio a lo largo del tiempo? ¿A qué categoría pertenecen?
+El objetivo de esta pregunta es identificar los productos cuyo precio ha cambiado más a lo largo del tiempo, y ver su categoría.
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+library(dplyr)
+
+# Crear el nuevo dataframe con las columnas correctas
+df_parking <- data.frame(
+  Cantidad = as.numeric(df$Cantidad),
+  Total = df$Total,
+  tiene_parking = df$parking,
+  Ubicacion = df$Ubicacion
+)
+
+# Eliminar posibles NAs en Cantidad
+df_parking <- df_parking %>% filter(!is.na(Cantidad))
+
+# Sumar cantidad total por ticket (por Total)
+suma_cantidad <- aggregate(Cantidad ~ Total, data = df_9, sum)
+
+# Marcar si algún producto del ticket tiene parking (Producto = "PARKING")
+nuevo_df <- df_parking %>%
+  group_by(Total) %>%
+  summarise(tiene_parking = any(tiene_parking))
+
+# Unir ambas tablas
+final_df <- merge(suma_cantidad, nuevo_df, by = "Total", all = TRUE)
+
+# Separar por uso de parking
+parking_df <- filter(final_df, tiene_parking == TRUE)
+noparking_df <- filter(final_df, tiene_parking == FALSE)
+
+# Calcular medias
+media_general <- mean(final_df$Cantidad, na.rm = TRUE)
+media_parking <- mean(parking_df$Cantidad, na.rm = TRUE)
+media_noparking <- mean(noparking_df$Cantidad, na.rm = TRUE)
+
+# Mostrar resultados
+cat("Media general:", media_general, "\n")
+cat("Media con parking:", media_parking, "\n")
+cat("Media sin parking:", media_noparking, "\n")
+
+# Clasificar por rangos de cantidad
+rango_bajo <- subset(final_df, Cantidad < 17)
+rango_medio <- subset(final_df, Cantidad >= 17 & Cantidad < 30)
+rango_alto <- subset(final_df, Cantidad >= 30)
+
+# Contar tickets por grupo
+datos_bajo <- c(sum(rango_bajo$tiene_parking == TRUE), sum(rango_bajo$tiene_parking == FALSE))
+datos_medio <- c(sum(rango_medio$tiene_parking == TRUE), sum(rango_medio$tiene_parking == FALSE))
+datos_alto <- c(sum(rango_alto$tiene_parking == TRUE), sum(rango_alto$tiene_parking == FALSE))
+
+categorias <- c("Con parking", "Sin parking")
+
+# Crear dataframe con los datos
+datos_rangos <- data.frame(
+  Rango = rep(c("Bajo", "Medio", "Alto"), each = 2),
+  Parking = rep(c("Con parking", "Sin parking"), 3),
+  Tickets = c(datos_bajo, datos_medio, datos_alto)
+)
+
+# Gráfico de barras apiladas
+library(ggplot2)
+ggplot(datos_rangos, aes(x = Rango, y = Tickets, fill = Parking)) +
+  geom_bar(stat = "identity") +
+  labs(title = "Uso de parking por cantidad de productos",
+       x = "Rango de productos comprados",
+       y = "Número de tickets") +
+  scale_fill_manual(values = c("green", "red")) +
+  theme_minimal()
+```
+
+El gráfico muestra que el uso del parking está fuertemente concentrado en los tickets con una mayor cantidad de productos. En el rango alto, correspondiente a compras más grandes, se observa una proporción destacada de tickets que incluyen el producto “PARKING”, mientras que en los rangos bajo y medio prácticamente no aparece.
+
+Esto sugiere que, según los datos disponibles, los clientes que realizan compras más voluminosas tienden a utilizar (o al menos registrar) el parking, mientras que quienes compran pocos productos apenas lo hacen. Sin embargo, es importante recordar que esta variable de parking se ha construido en base a la presencia de una línea específica en el ticket, por lo que puede no reflejar con total precisión el uso real del aparcamiento por parte del cliente.
+
+
