@@ -322,21 +322,31 @@ library(dplyr)
 library(ggplot2)
 library(stringr)
 
-# Paso 1: Filtrar solo productos vendidos "a peso" (que tenían 'kg' en la descripción original)
-frutas_verduras_peso <- datos_integrados %>%
+# Paso 1: Filtrar productos con 'kg' en el nombre
+frutas_verduras_peso <- df %>%
   filter(!is.na(Cantidad)) %>%
   filter(str_detect(tolower(Producto), "kg"))
 
-# Paso 2: Agrupar por producto y sumar kilos
+# Paso 2: Limpiar texto y convertir cantidad a numérico
+frutas_verduras_peso <- frutas_verduras_peso %>%
+  mutate(
+    Producto = tolower(Producto),
+    Producto = trimws(Producto),
+    Producto = gsub("\\.$", "", Producto),
+    Cantidad = as.numeric(Cantidad)  # ← 🔧 línea clave
+  ) %>%
+  filter(!is.na(Cantidad))  # Eliminar filas que no se hayan podido convertir
+
+# Paso 3: Agrupar y sumar kilos vendidos
 top_frutas_verduras <- frutas_verduras_peso %>%
   group_by(Producto) %>%
   summarise(Kilos_vendidos = sum(Cantidad)) %>%
   arrange(desc(Kilos_vendidos)) %>%
   slice_head(n = 5)
 
-# Paso 3: Gráfico
+# Paso 4: Gráfico
 ggplot(top_frutas_verduras, aes(x = reorder(Producto, Kilos_vendidos), y = Kilos_vendidos)) +
-  geom_col(fill = "darkgreen") +
+  geom_col(fill = "pink") +
   geom_text(aes(label = round(Kilos_vendidos, 1)), hjust = -0.1) +
   coord_flip() +
   labs(title = "Top 5 productos más vendidos (a peso)",
@@ -352,19 +362,32 @@ ggplot(top_frutas_verduras, aes(x = reorder(Producto, Kilos_vendidos), y = Kilos
 ```{r top-pescado, echo=TRUE, warning=FALSE, message=FALSE}
 library(dplyr)
 library(ggplot2)
+library(stringr)
 
-# Filtramos productos de pescado (sin filtrar por "kg" ahora)
-top_pescado_unidades <- datos_integrados %>%
-  filter(str_detect(tolower(Producto), "pescado|salmon|merluza|atun|bacalao|dorada|lubina|sardina|boqueron|rape")) %>%
+# Filtrar productos de pescado y limpiar nombres
+top_pescado_unidades <- df %>%
+  filter(str_detect(tolower(Producto),
+  "\\b(pescado|salmon|merluza|atun|bacalao|dorada|lubina|sardina|boqueron|rape)\\b")) %>%
+  filter(!str_detect(tolower(Producto), "pizza|galleta|maria")) %>%  
+  #justo esas palabras daban error (por ej. pizza de atun y bacon o galletas maria doradas) asi que hacemos que las ignore
+  mutate(
+    Cantidad = as.numeric(Cantidad),
+    Producto = tolower(Producto),
+    Producto = trimws(Producto),  # eliminar espacios extra
+    Producto = gsub("\\s+", " ", Producto),  # unificar espacios múltiples
+    Producto = gsub("[[:punct:]]", "", Producto)  # eliminar puntos, comas, etc.
+    #asi evitamos repeticiones
+  ) %>%
+  filter(!is.na(Cantidad)) %>%
   group_by(Producto) %>%
-  summarise(Unidades_vendidas = sum(Cantidad)) %>%  # Suma unidades, no kilos
+  summarise(Unidades_vendidas = sum(Cantidad)) %>%
   arrange(desc(Unidades_vendidas)) %>%
   slice_head(n = 5)
 
-# Gráfico de unidades
+# Gráfico
 ggplot(top_pescado_unidades, aes(x = reorder(Producto, Unidades_vendidas), y = Unidades_vendidas)) +
   geom_col(fill = "#1f77b4") +
-  geom_text(aes(label = Unidades_vendidas), hjust = -0.1) +
+  geom_text(aes(label = round(Unidades_vendidas, 1)), hjust = -0.1) +
   coord_flip() +
   labs(
     title = "Top 5 productos de PESCADO por unidades vendidas",
@@ -372,6 +395,8 @@ ggplot(top_pescado_unidades, aes(x = reorder(Producto, Unidades_vendidas), y = U
     y = "Unidades vendidas"
   ) +
   theme_minimal()
+
+
 ``` 
 
 
@@ -710,38 +735,6 @@ correlacion_redon
 11. ¿Existe alguna relación entre la cantidad de productos y el parking?
 El objetivo de esta pregunta es ver si la cantidad total de productos comprados en un ticket guarda relación con si el cliente ontiene parking o no
 
-```{r}
-# Convertir la columna Cantidad a numérico (puede haber errores por tickets mal procesados)
-df_limpio <- df %>%
-  mutate(Cantidad = as.numeric(Cantidad)) %>%
-  filter(!is.na(Cantidad))  # Eliminar filas con errores en la conversión
-
-# Agrupar por ticket (usamos Supermercado + Fecha + Hora como identificador) y parking
-productos_por_ticket <- df_limpio %>%
-  group_by(Supermercado, Fecha, Hora, parking) %>%
-  summarise(Cantidad_total = sum(Cantidad), .groups = "drop")
-
-# Visualizar la relación con un boxplot
-ggplot(productos_por_ticket, aes(x = parking, y = Cantidad_total)) +
-  geom_boxplot() +
-  labs(
-    title = "Cantidad de productos según uso de parking",
-    x = "¿Usó parking?",
-    y = "Cantidad total de productos"
-  )
-
-# Prueba t de diferencia de medias entre grupos (parking: sí/no)
-t.test(Cantidad_total ~ parking, data = productos_por_ticket)
-
-table(df$parking)
-
-df %>% filter(parking == TRUE) %>% select(Producto, Cantidad, precio_prod, Supermercado, Fecha)
-
-```
-
-12. ¿Qué productos muestran mayor variación de precio a lo largo del tiempo? ¿A qué categoría pertenecen?
-El objetivo de esta pregunta es identificar los productos cuyo precio ha cambiado más a lo largo del tiempo, y ver su categoría.
-
 ```{r, echo=FALSE, warning=FALSE, message=FALSE}
 library(dplyr)
 
@@ -814,5 +807,45 @@ ggplot(datos_rangos, aes(x = Rango, y = Tickets, fill = Parking)) +
 El gráfico muestra que el uso del parking está fuertemente concentrado en los tickets con una mayor cantidad de productos. En el rango alto, correspondiente a compras más grandes, se observa una proporción destacada de tickets que incluyen el producto “PARKING”, mientras que en los rangos bajo y medio prácticamente no aparece.
 
 Esto sugiere que, según los datos disponibles, los clientes que realizan compras más voluminosas tienden a utilizar (o al menos registrar) el parking, mientras que quienes compran pocos productos apenas lo hacen. Sin embargo, es importante recordar que esta variable de parking se ha construido en base a la presencia de una línea específica en el ticket, por lo que puede no reflejar con total precisión el uso real del aparcamiento por parte del cliente.
+
+
+
+
+12. ¿Qué 10 productos muestran mayor variación de precio a lo largo del tiempo? ¿A qué categoría pertenecen?
+El objetivo de esta pregunta es identificar los productos cuyo precio ha cambiado más a lo largo del tiempo, y ver su categoría.
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+library(dplyr)
+library(ggplot2)
+
+# Eliminar productos con precios NA o cero (si deseas ignorarlos)
+df_precios <- df %>%
+  filter(!is.na(precio_prod), precio_prod > 0)
+
+# Calcular desviación estándar del precio por producto
+variacion_precios <- df_precios %>%
+  group_by(Producto) %>%
+  summarise(
+    desv_std = sd(precio_prod, na.rm = TRUE),
+    media_precio = mean(precio_prod, na.rm = TRUE),
+    n = n()
+  ) %>%
+  filter(n >= 3) %>%  # Evitar productos con muy pocas observaciones
+  arrange(desc(desv_std))
+
+# Mostrar los 10 productos con mayor variación
+top10 <- head(variacion_precios, 10)
+
+# Gráfico de barras
+ggplot(top10, aes(x = reorder(Producto, desv_std), y = desv_std)) +
+  geom_col(fill = "blue") +
+  coord_flip() +
+  labs(
+    title = "Top 10 productos con mayor variación de precio",
+    x = "Producto",
+    y = "Desviación estándar del precio"
+  ) +
+  theme_minimal()
+```
 
 
